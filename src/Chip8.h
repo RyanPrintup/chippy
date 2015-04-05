@@ -8,6 +8,8 @@ class Chip8
 		bool loadProgram(std::string path);
 		void run();
 
+		bool drawFlag;
+
 	private:
 		unsigned short opcode;
 
