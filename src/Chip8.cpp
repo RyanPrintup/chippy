@@ -28,7 +28,7 @@ void Chip8::init()
 	pc = 0x200;
 
 	for (int i = 0; i < 64 * 32; i++) {
-		gfx[i] = 0;
+		gfx[i] = 1;
 	}
 
 	delay_timer = 0;
@@ -107,7 +107,7 @@ void Chip8::run()
 	// Fetch opcode
 	opcode = memory[pc] << 8 | memory[pc + 1];
 
-	// Declared here to avoid cross initilization error
+	// Declared here to avoid cross initialization error
 	int x, y;
 
 	// Decode opcode
@@ -288,8 +288,37 @@ void Chip8::run()
 			V[x] = (rand() % 0xFF) & (opcode & 0x00FF);
 			pc += 2;
 			break;
-		case 0xD000: // To-do drawing opcode
-			break;
+		case 0xD000:
+		{
+			/**
+			 * Sprites stored in memory at location in index register (I), maximum 8-bits wide.
+			 * Wraps around the screen. If when drawn, clears a pixel, register VF is set to 1
+			 * otherwise it is 0. All drawing is XOR drawing (i.e. it toggles the screen pixels)
+			 */
+			unsigned short spriteX = V[(opcode & 0x0F00) >> 8];
+			unsigned short spriteY = V[(opcode & 0x00F0) >> 4];
+			unsigned short height = opcode & 0x000F;
+			unsigned short pixel;
+
+			V[0xF] = 0;
+			for (int yLine = 0; yLine < height; yLine++) {
+				pixel = memory[I + yLine];
+
+				for (int xLine = 0; xLine < 8; xLine++) {
+					if ((pixel & (0x80 >> xLine)) != 0) {
+						if (gfx[(spriteX + xLine + ((spriteY + yLine) * 64))] == 1) {
+							V[0xF] = 1;
+						}
+
+						gfx[spriteX + xLine + ((spriteY + yLine) * 64)] ^= 1;
+					}
+				}
+			}
+
+			drawFlag = true;
+			pc += 2;
+		}
+		break;
 		case 0xE000:
 			switch (opcode & 0x000F) {
 				case 0x000E: // Skips the next instruction if the key stored in VX is pressed
@@ -322,8 +351,26 @@ void Chip8::run()
 					V[x] = delay_timer;
 					pc += 2;
 					break;
-				case 0x000A:
-					break;
+				case 0x000A: // A key press is awaited, and then stored in VX;
+				{
+					x = (opcode & 0x0F00) >> 8;
+					bool keyPress = false;
+
+					for (int i = 0; i < 16; i++) {
+						if (key[i] != 0) {
+							V[x] = i;
+							keyPress = true;
+						}
+					}
+
+					// Return and retry cycle
+					if (!keyPress) {
+						return;
+					}
+
+					pc += 2;
+				}
+				break;
 				case 0x0015: // Sets the delay_timer to VX
 					x = (opcode & 0x0F00) >> 8;
 					
@@ -355,7 +402,7 @@ void Chip8::run()
 					pc += 2;
 					break;
 				case 0x0033:
-					/* 
+					/** 
 					 * Stores the Binary-coded decimal representation of VX, with the most significant
 					 * of three digits at the address in I, the middle digit at I plus 1, and the least
 					 * significant digit at I plus 2.
@@ -396,7 +443,17 @@ void Chip8::run()
 		default:
 			std::cout << "Unknown opcode: " << opcode << std::endl;
 	}
-	// Execute opcode
-
+	
 	// Update timers
+	if (delay_timer > 0) {
+		delay_timer--;
+	}
+
+	if (sound_timer > 0) {
+		if (sound_timer == 1) {
+			std::cout << "BEEP!" << std::endl;
+		}
+
+		sound_timer--;
+	}
 }
