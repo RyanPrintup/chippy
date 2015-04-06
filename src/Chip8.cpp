@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -28,7 +29,7 @@ void Chip8::init()
 	pc = 0x200;
 
 	for (int i = 0; i < 64 * 32; i++) {
-		gfx[i] = 1;
+		gfx[i] = 0;
 	}
 
 	delay_timer = 0;
@@ -41,7 +42,7 @@ void Chip8::init()
 	sp = 0;
 
 	for (int i = 0; i < 16; i++) {
-		key[i] = 0;
+		key[i] = 0;	
 	}
 
 	unsigned char fontset[80] =
@@ -97,6 +98,8 @@ bool Chip8::loadProgram(const char* path)
 
 		delete[] buffer;
 		return true;
+	} else {
+		std::cout << "File not open";
 	}
 	
 	return false;
@@ -174,9 +177,10 @@ void Chip8::run()
 			pc += 2;
 			break;
 		case 0x7000: // Adds NN to VX
-			x = opcode & 0x0F00;
-			
+			x = (opcode & 0x0F00) >> 8;
+
 			V[x] += opcode & 0x00FF;
+			pc += 2;
 			break;
 		case 0x8000:
 			switch (opcode & 0x000F) {
@@ -323,8 +327,8 @@ void Chip8::run()
 			switch (opcode & 0x000F) {
 				case 0x000E: // Skips the next instruction if the key stored in VX is pressed
 					x = (opcode & 0x0F00) >> 8;
-					
-					if (key[V[x]]) {
+
+					if (key[V[x]] == 1) {
 						pc += 4;
 					} else {
 						pc += 2;
@@ -333,7 +337,7 @@ void Chip8::run()
 				case 0x0001: // Skips the next instruction if the key stored in VX isn't pressed
 					x = (opcode & 0x0F00) >> 8;
 					
-					if (!key[V[x]]) {
+					if (key[V[x]] == 0) {
 						pc += 4;
 					} else {
 						pc += 2;
@@ -344,7 +348,7 @@ void Chip8::run()
 			}
 			break;
 		case 0xF000:
-			switch (opcode & 0x000F) {
+			switch (opcode & 0x00FF) {
 				case 0x0007: // Sets VX to the value of the delay_timer
 					x = (opcode & 0x0F00) >> 8;
 					
@@ -357,7 +361,7 @@ void Chip8::run()
 					bool keyPress = false;
 
 					for (int i = 0; i < 16; i++) {
-						if (key[i] != 0) {
+						if (key[i] == 1) {
 							V[x] = i;
 							keyPress = true;
 						}
