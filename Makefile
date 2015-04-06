@@ -1,4 +1,5 @@
 CC = g++
+CFLAGS = -std=c++11
 
 BIN_DIR = bin
 SRC_DIR = src
@@ -12,10 +13,10 @@ EXECUTABLE = Chippy
 all: $(EXECUTABLE)
 
 $(EXECUTABLE) : $(OBJECTS)
-	$(CC) $(LIBS) $(OBJECTS) -o $(BIN_DIR)/$@
+	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o $(BIN_DIR)/$@
 
 $(BIN_DIR)/%.o : $(SRC_DIR)/%.cpp
-	$(CC) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -f $(BIN_DIR)/*.o $(BIN_DIR)/$(EXECUTABLE)
