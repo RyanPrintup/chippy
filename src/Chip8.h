@@ -1,13 +1,13 @@
 #ifndef _CHIP8_H_
 #define _CHIP8_H_
 
-#include <string>
-
 class Chip8 
 {
 	public:
+		Chip8();
+
 		void init();
-		bool loadProgram(std::string path);
+		bool loadProgram(const char* path);
 		void run();
 
 		bool drawFlag;

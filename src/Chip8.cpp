@@ -1,9 +1,15 @@
 #include "Chip8.h"
 
 #include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+
+Chip8::Chip8()
+{
+	init();
+}
 
 void Chip8::init()
 {
@@ -66,21 +72,21 @@ void Chip8::init()
 	srand (time(NULL));
 }
 
-bool Chip8::loadProgram(std::string file)
+bool Chip8::loadProgram(const char* path)
 {
-	std::ifstream program(file, std::ios::in | std::ios::binary);
+	std::ifstream program(path, std::ios::in | std::ios::binary);
 	
 	if (program.is_open()) {
-		program.seekg(0, file.end);
-		int size = file.tellg();
-		program.seekg(0, file.beg);
+		program.seekg(0, std::ios::end);
+		int size = program.tellg();
+		program.seekg(0, std::ios::beg);
 
 		if (size > 0x1000 - 0x200) {
-			std::cerr << "File '" << file << "' exceeds memory size." << std::endl;
+			std::cerr << "File '" << path << "' exceeds memory size." << std::endl;
 			return false;
 		}
 
-		char* buffer[] = new char[size];
+		char* buffer = new char[size];
 
 		program.read(buffer, size);
 		program.close();
