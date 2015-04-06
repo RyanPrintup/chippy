@@ -1,6 +1,8 @@
 #ifndef _CHIP8_H_
 #define _CHIP8_H_
 
+#include <string>
+
 class Chip8 
 {
 	public:
