@@ -18,7 +18,7 @@ $(EXECUTABLE) : $(OBJECTS)
 $(BIN_DIR)/%.o : $(SRC_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
-.PHONY clean
+.PHONY: clean
 
 clean:
 	rm -f $(BIN_DIR)/*.o $(BIN_DIR)/$(EXECUTABLE)
